@@ -31,16 +31,59 @@ func (suite *CmdSuite) TearDownTest() {
 }
 
 func (suite *CmdSuite) TestExecCmdInCli() {
-	assert.Equal(suite.T(), ExecCmdInCli("non-exist cmd"), "ERR unknown command 'non-exist cmd'")
+	assert.Equal(suite.T(), "ERR unknown command 'non-exist cmd'", ExecCmdInCli("non-exist cmd"))
+	// Ignore the case of command name
+	assert.Equal(suite.T(), "0", ExecCmdInCli("EXISTS", "bucket"))
 }
 
 func (suite *CmdSuite) TestExists() {
-	assert.Equal(suite.T(), ExecCmdInCli("exists", "test"), "0")
-	assert.Equal(suite.T(), ExecCmdInCli("exists"), "ERR wrong number of arguments for 'exists' command")
+	assert.Equal(suite.T(), "0", ExecCmdInCli("exists", "bucket"))
+	assert.Equal(suite.T(), "ERR wrong number of arguments for 'exists' command", ExecCmdInCli("exists"))
 
 	DB.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucket([]byte("test"))
+		tx.CreateBucket([]byte("bucket"))
 		return nil
 	})
-	assert.Equal(suite.T(), ExecCmdInCli("exists", "test"), "1")
+	assert.Equal(suite.T(), "1", ExecCmdInCli("exists", "bucket"))
+}
+
+func (suite *CmdSuite) TestGet() {
+	assert.Equal(suite.T(), "ERR wrong number of arguments for 'get' command", ExecCmdInCli("get", "bucket"))
+	assert.Equal(suite.T(), "ERR specific bucket 'bucket' does not exist", ExecCmdInCli("get", "bucket", "key"))
+
+	DB.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucket([]byte("bucket"))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("key"), []byte("value"))
+	})
+	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket", "key"))
+	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "non-exist"))
+}
+
+func (suite *CmdSuite) TestSet() {
+	assert.Equal(suite.T(), "ERR wrong number of arguments for 'set' command",
+		ExecCmdInCli("set", "bucket", "key"))
+	assert.Equal(suite.T(), "OK", ExecCmdInCli("set", "bucket", "key", "value"))
+	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket", "key"))
+}
+
+func (suite *CmdSuite) TestDel() {
+	assert.Equal(suite.T(), "ERR wrong number of arguments for 'del' command", ExecCmdInCli("del"))
+	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket"))
+	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket", "key"))
+
+	DB.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucket([]byte("bucket"))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("key"), []byte("value"))
+	})
+	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket", "key"))
+	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "key"))
+	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket", "key"))
+	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket"))
+	assert.Equal(suite.T(), "0", ExecCmdInCli("exists", "bucket"))
 }

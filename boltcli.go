@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	// DB is the global boltdb instance which will be inited in the beginning.
 	DB *bolt.DB
 )
 
