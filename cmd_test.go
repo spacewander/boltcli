@@ -33,18 +33,18 @@ func (suite *CmdSuite) TearDownTest() {
 func (suite *CmdSuite) TestExecCmdInCli() {
 	assert.Equal(suite.T(), "ERR unknown command 'non-exist cmd'", ExecCmdInCli("non-exist cmd"))
 	// Ignore the case of command name
-	assert.Equal(suite.T(), "0", ExecCmdInCli("EXISTS", "bucket"))
+	assert.Equal(suite.T(), "false", ExecCmdInCli("EXISTS", "bucket"))
 }
 
 func (suite *CmdSuite) TestExists() {
-	assert.Equal(suite.T(), "0", ExecCmdInCli("exists", "bucket"))
+	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket"))
 	assert.Equal(suite.T(), "ERR wrong number of arguments for 'exists' command", ExecCmdInCli("exists"))
 
 	DB.Update(func(tx *bolt.Tx) error {
 		tx.CreateBucket([]byte("bucket"))
 		return nil
 	})
-	assert.Equal(suite.T(), "1", ExecCmdInCli("exists", "bucket"))
+	assert.Equal(suite.T(), "true", ExecCmdInCli("exists", "bucket"))
 }
 
 func (suite *CmdSuite) TestGet() {
@@ -85,5 +85,5 @@ func (suite *CmdSuite) TestDel() {
 	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "key"))
 	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket", "key"))
 	assert.Equal(suite.T(), "OK", ExecCmdInCli("del", "bucket"))
-	assert.Equal(suite.T(), "0", ExecCmdInCli("exists", "bucket"))
+	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket"))
 }

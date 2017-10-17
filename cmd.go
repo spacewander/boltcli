@@ -42,9 +42,9 @@ func exists(args []string) (res interface{}, err error) {
 		return nil, err
 	}
 	if b == nil {
-		return 0, nil
+		return false, nil
 	}
-	return 1, nil
+	return true, nil
 }
 
 func get(args []string) (res interface{}, err error) {
@@ -107,8 +107,8 @@ func ExecCmdInCli(cmd string, args ...string) string {
 		return fmt.Sprintf("ERR %v", err)
 	}
 	switch res := res.(type) {
-	case int:
-		return strconv.Itoa(res)
+	case bool:
+		return strconv.FormatBool(res)
 	case []byte:
 		return string(res)
 	case string:
