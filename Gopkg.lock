@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  name = "github.com/boltdb/bolt"
+  name = "github.com/coreos/bbolt"
   packages = ["."]
   revision = "aa66506030b376f848667d84d2596faa8a7099ea"
   version = "v1.0"
@@ -21,13 +21,13 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = ["assert","require","suite"]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
   version = "v1.1.4"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1e48fb85ee812f0763b91d0f91f86213bb25e1c5863f3cdb48c359a49bc9c0d3"
+  inputs-digest = "71831ff8d7269267a0ef275dbf7487a35411389f3c88d0e70f216f75dbb456ec"
   solver-name = "gps-cdcl"
   solver-version = 1

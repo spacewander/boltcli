@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 var (

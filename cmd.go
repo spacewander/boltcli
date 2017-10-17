@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 func del(args []string) (res interface{}, err error) {
