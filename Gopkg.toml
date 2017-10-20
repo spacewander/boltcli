@@ -32,3 +32,7 @@
 [[constraint]]
   name = "github.com/gobwas/glob"
   version = "0.2.2"
+
+[[constraint]]
+  name = "github.com/chzyer/readline"
+  version = "1.4.0"

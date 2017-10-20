@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/chzyer/readline"
+  packages = ["."]
+  revision = "62c6fe6193755f722b8b8788aa7357be55a50ff1"
+  version = "v1.4"
+
+[[projects]]
   name = "github.com/coreos/bbolt"
   packages = ["."]
   revision = "aa66506030b376f848667d84d2596faa8a7099ea"
@@ -34,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "42c1c109883a51ec0a63349b64a927f78ceef63d4ba12341548d546769035a81"
+  inputs-digest = "f85d5a5f858ab31ab399fca88be3785eff9a8f48e0582610381aa9b3e789d470"
   solver-name = "gps-cdcl"
   solver-version = 1
