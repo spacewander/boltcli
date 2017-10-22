@@ -117,26 +117,33 @@ func exists(args ...string) (res interface{}, err error) {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "exists")
 	}
 	var b *bolt.Bucket
+	found := false
 	err = DB.View(func(tx *bolt.Tx) error {
 		b = tx.Bucket([]byte(args[0]))
 		if b == nil {
 			return nil
 		}
-		for i := 1; i < argsLen; i++ {
+		if argsLen == 1 {
+			found = true
+			return nil
+		}
+		for i := 1; i < argsLen-1; i++ {
 			b = b.Bucket([]byte(args[i]))
 			if b == nil {
 				return nil
 			}
 		}
+		lastWord := []byte(args[argsLen-1])
+		if b.Bucket(lastWord) == nil && b.Get(lastWord) == nil {
+			return nil
+		}
+		found = true
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	if b == nil {
-		return false, nil
-	}
-	return true, nil
+	return found, nil
 }
 
 func get(args ...string) (res interface{}, err error) {

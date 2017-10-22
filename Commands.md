@@ -13,12 +13,12 @@
 ### exists
 
 ```
-exists [bucket...] bucket
+exists [bucket...] bucket/key
 ```
 
-Check if given bucket exists.
+Check if given bucket/key exists.
 
-Return `true` if a bucket exists, `false` if not.
+Return `true` if a bucket/key exists, `false` if not.
 
 ### get
 

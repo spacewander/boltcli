@@ -43,13 +43,20 @@ func (suite *CmdSuite) TestExists() {
 
 	DB.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucket([]byte("bucket"))
+		b.Put([]byte("key"), []byte("value"))
 		b, _ = b.CreateBucket([]byte("subbucket"))
-		b.CreateBucket([]byte("subbucket"))
+		b, _ = b.CreateBucket([]byte("subbucket"))
+		b.Put([]byte("key"), []byte("value"))
 		return nil
 	})
 	assert.Equal(suite.T(), "true", ExecCmdInCli("exists", "bucket"))
+	assert.Equal(suite.T(), "true", ExecCmdInCli("exists", "bucket", "key"))
+
 	assert.Equal(suite.T(), "true", ExecCmdInCli("exists", "bucket", "subbucket"))
 	assert.Equal(suite.T(), "true", ExecCmdInCli("exists", "bucket", "subbucket", "subbucket"))
+	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket", "subbucket", "non-exist", "key"))
+	assert.Equal(suite.T(), "true", ExecCmdInCli("exists", "bucket", "subbucket", "subbucket", "key"))
+	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket", "subbucket", "subbucket", "non-exist"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket2", "subbucket2"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket", "subbucket2"))
 }
