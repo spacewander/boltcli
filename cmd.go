@@ -17,20 +17,45 @@ func del(args ...string) (res interface{}, err error) {
 	if argsLen == 0 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "del")
 	}
+	found := false
 	err = DB.Update(func(tx *bolt.Tx) error {
+		if argsLen == 1 {
+			err = tx.DeleteBucket([]byte(args[0]))
+			if err == nil {
+				found = true
+			} else if err == bolt.ErrBucketNotFound {
+				return nil
+			}
+			return err
+		}
 		b := tx.Bucket([]byte(args[0]))
 		if b == nil {
 			return nil
 		}
-		if argsLen > 1 {
-			return b.Delete([]byte(args[1]))
+		for i := 1; i < argsLen-1; i++ {
+			b = b.Bucket([]byte(args[i]))
+			if b == nil {
+				return nil
+			}
 		}
-		return tx.DeleteBucket([]byte(args[0]))
+		key := []byte(args[argsLen-1])
+		err = b.DeleteBucket(key)
+		if err == nil {
+			found = true
+		} else if err == bolt.ErrBucketNotFound || err == bolt.ErrIncompatibleValue {
+			value := b.Get(key)
+			if value == nil {
+				return nil
+			}
+			found = true
+			return b.Delete(key)
+		}
+		return err
 	})
 	if err != nil {
 		return nil, err
 	}
-	return true, nil
+	return found, nil
 }
 
 func delGlob(args ...string) (res interface{}, err error) {
@@ -58,19 +83,26 @@ func delGlob(args ...string) (res interface{}, err error) {
 			}
 		} else {
 			b := tx.Bucket([]byte(args[0]))
-			if b != nil {
-				c := b.Cursor()
-				for k, _ := c.First(); k != nil; k, _ = c.Next() {
-					if pattern.Match(string(k)) {
-						err = b.Delete(k)
-						if err == bolt.ErrIncompatibleValue {
-							err = b.DeleteBucket(k)
-						}
-						if err != nil {
-							return err
-						}
-						count++
+			if b == nil {
+				return nil
+			}
+			for i := 1; i < argsLen-1; i++ {
+				b = b.Bucket([]byte(args[i]))
+				if b == nil {
+					return nil
+				}
+			}
+			c := b.Cursor()
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+				if pattern.Match(string(k)) {
+					err = b.Delete(k)
+					if err == bolt.ErrIncompatibleValue {
+						err = b.DeleteBucket(k)
 					}
+					if err != nil {
+						return err
+					}
+					count++
 				}
 			}
 		}
@@ -80,12 +112,22 @@ func delGlob(args ...string) (res interface{}, err error) {
 }
 
 func exists(args ...string) (res interface{}, err error) {
-	if len(args) != 1 {
+	argsLen := len(args)
+	if argsLen < 1 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "exists")
 	}
 	var b *bolt.Bucket
 	err = DB.View(func(tx *bolt.Tx) error {
 		b = tx.Bucket([]byte(args[0]))
+		if b == nil {
+			return nil
+		}
+		for i := 1; i < argsLen; i++ {
+			b = b.Bucket([]byte(args[i]))
+			if b == nil {
+				return nil
+			}
+		}
 		return nil
 	})
 	if err != nil {
@@ -98,25 +140,37 @@ func exists(args ...string) (res interface{}, err error) {
 }
 
 func get(args ...string) (res interface{}, err error) {
-	if len(args) < 2 {
+	argsLen := len(args)
+	if argsLen < 2 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "get")
 	}
 	err = DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(args[0]))
 		if b == nil {
-			return fmt.Errorf("specific bucket '%s' does not exist", args[0])
+			return nil
 		}
-		res = b.Get([]byte(args[1]))
+		i := 1
+		for ; i < argsLen-1; i++ {
+			b = b.Bucket([]byte(args[i]))
+			if b == nil {
+				return nil
+			}
+		}
+		res = b.Get([]byte(args[i]))
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
+	if res == nil {
+		res = ""
+	}
 	return
 }
 
 func set(args ...string) (res interface{}, err error) {
-	if len(args) < 3 {
+	argsLen := len(args)
+	if argsLen < 3 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "set")
 	}
 	err = DB.Update(func(tx *bolt.Tx) error {
@@ -127,7 +181,17 @@ func set(args ...string) (res interface{}, err error) {
 				return err
 			}
 		}
-		return b.Put([]byte(args[1]), []byte(args[2]))
+		for i := 1; i < argsLen-2; i++ {
+			subb := b.Bucket([]byte(args[i]))
+			if subb == nil {
+				subb, err = b.CreateBucket([]byte(args[i]))
+				if err != nil {
+					return err
+				}
+			}
+			b = subb
+		}
+		return b.Put([]byte(args[argsLen-2]), []byte(args[argsLen-1]))
 	})
 	if err != nil {
 		return nil, err
@@ -136,22 +200,43 @@ func set(args ...string) (res interface{}, err error) {
 }
 
 func buckets(args ...string) (res interface{}, err error) {
-	if len(args) != 1 {
+	argsLen := len(args)
+	if argsLen < 1 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "buckets")
 	}
-	pattern, err := glob.Compile(args[0])
+	pattern, err := glob.Compile(args[argsLen-1])
 	if err != nil {
 		return
 	}
 	res = []string{}
 	err = DB.View(func(tx *bolt.Tx) error {
-		tx.ForEach(func(bname []byte, b *bolt.Bucket) error {
-			name := string(bname)
-			if pattern.Match(name) {
-				res = append(res.([]string), name)
+		if argsLen > 1 {
+			b := tx.Bucket([]byte(args[0]))
+			if b == nil {
+				return nil
 			}
-			return nil
-		})
+			for i := 1; i < argsLen-1; i++ {
+				b = b.Bucket([]byte(args[i]))
+				if b == nil {
+					return nil
+				}
+			}
+			b.ForEach(func(k, v []byte) error {
+				name := string(k)
+				if pattern.Match(name) && b.Bucket(k) != nil {
+					res = append(res.([]string), name)
+				}
+				return nil
+			})
+		} else {
+			tx.ForEach(func(bname []byte, b *bolt.Bucket) error {
+				name := string(bname)
+				if pattern.Match(name) {
+					res = append(res.([]string), name)
+				}
+				return nil
+			})
+		}
 		return nil
 	})
 	if err != nil {
@@ -161,10 +246,11 @@ func buckets(args ...string) (res interface{}, err error) {
 }
 
 func keys(args ...string) (res interface{}, err error) {
-	if len(args) != 2 {
+	argsLen := len(args)
+	if len(args) < 2 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "keys")
 	}
-	pattern, err := glob.Compile(args[1])
+	pattern, err := glob.Compile(args[argsLen-1])
 	if err != nil {
 		return
 	}
@@ -174,9 +260,15 @@ func keys(args ...string) (res interface{}, err error) {
 		if b == nil {
 			return nil
 		}
+		for i := 1; i < argsLen-1; i++ {
+			b = b.Bucket([]byte(args[i]))
+			if b == nil {
+				return nil
+			}
+		}
 		b.ForEach(func(k, v []byte) error {
 			key := string(k)
-			if pattern.Match(key) {
+			if pattern.Match(key) && b.Bucket(k) == nil {
 				res = append(res.([]string), key)
 			}
 			return nil
@@ -190,10 +282,11 @@ func keys(args ...string) (res interface{}, err error) {
 }
 
 func keyvalues(args ...string) (res interface{}, err error) {
-	if len(args) != 2 {
+	argsLen := len(args)
+	if argsLen < 2 {
 		return nil, fmt.Errorf("wrong number of arguments for '%s' command", "keyvalues")
 	}
-	pattern, err := glob.Compile(args[1])
+	pattern, err := glob.Compile(args[argsLen-1])
 	if err != nil {
 		return
 	}
@@ -203,9 +296,15 @@ func keyvalues(args ...string) (res interface{}, err error) {
 		if b == nil {
 			return nil
 		}
+		for i := 1; i < argsLen-1; i++ {
+			b = b.Bucket([]byte(args[i]))
+			if b == nil {
+				return nil
+			}
+		}
 		b.ForEach(func(k, v []byte) error {
 			key := string(k)
-			if pattern.Match(key) {
+			if pattern.Match(key) && b.Bucket(k) == nil {
 				res.(map[string]interface{})[key] = string(v)
 			}
 			return nil
@@ -311,6 +410,8 @@ func ExecCmdInCli(cmd string, args ...string) string {
 		return strconv.FormatBool(res)
 	case []byte:
 		return string(res)
+	case string:
+		return res
 	case []string:
 		return formatListToStr(res)
 	case map[string]interface{}:

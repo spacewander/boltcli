@@ -13,7 +13,7 @@
 ### exists
 
 ```
-exists bucket
+exists [bucket...] bucket
 ```
 
 Check if given bucket exists.
@@ -23,19 +23,17 @@ Return `true` if a bucket exists, `false` if not.
 ### get
 
 ```
-get bucket key
+get [bucket...] bucket key
 ```
 
 Return the value of given key in specific bucket.
 
-If the bucket doesn't exist, throw "specific bucket 'x' does not exist" error.
-
-If the key doesn't exist, return an empty string.
+If the bucket or key doesn't exist, return an empty string.
 
 ### set
 
 ```
-set bucket key value
+set [bucket...] bucket key value
 ```
 
 Set the value of given key in specific bucket, and return `true`.
@@ -45,16 +43,14 @@ If the bucket doesn't exist, it will be created.
 ### del
 
 ```
-del bucket [key]
+del [bucket...] bucket/key
 ```
 
 Delete the key in specific bucket, and return `true`.
 
 If not key given, delete the bucket, and return `true`.
 
-If the bucket doesn't exist, return `true` with nothing change.
-
-If the given key doesn't exist, return `true` with nothing change.
+If the bucket/key doesn't exist, return `false`.
 
 ### delglob
 
@@ -69,7 +65,7 @@ If specific bucket doesn't exist, return 0.
 ### buckets
 
 ```
-buckets bucket_pattern
+buckets [bucket...] bucket_pattern
 ```
 
 List al buckets matched givn glob pattern.
@@ -77,7 +73,7 @@ List al buckets matched givn glob pattern.
 ### keys
 
 ```
-keys bucket key_pattern
+keys [bucket...] bucket key_pattern
 ```
 
 List all keys in specific bucket which matched given glob pattern.
@@ -85,7 +81,7 @@ List all keys in specific bucket which matched given glob pattern.
 ### keyvalues
 
 ```
-keyvalues bucket key_pattern
+keyvalues [bucket...] bucket key_pattern
 ```
 
 List all keys in specific bucket which matched given glob pattern, and their associated values.
