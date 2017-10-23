@@ -10,6 +10,8 @@ import (
 var (
 	// DB is the global boltdb instance which will be inited in the beginning.
 	DB *bolt.DB
+	// DbPath is the path of given db file
+	DbPath string
 )
 
 func initDB(dbPath string) {
@@ -18,6 +20,7 @@ func initDB(dbPath string) {
 		log.Fatalf("Could not open %s: %v", dbPath, err)
 	}
 	DB = db
+	DbPath = dbPath
 }
 
 func main() {
@@ -25,5 +28,6 @@ func main() {
 		log.Fatalf("database filename is required.")
 	}
 	initDB(os.Args[1])
-	DB.Close()
+	defer DB.Close()
+	StartCli()
 }

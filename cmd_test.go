@@ -63,7 +63,7 @@ func (suite *CmdSuite) TestExists() {
 
 func (suite *CmdSuite) TestGet() {
 	assert.Equal(suite.T(), "ERR wrong number of arguments for 'get' command", ExecCmdInCli("get", "bucket"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "key"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "key"))
 
 	DB.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucket([]byte("bucket"))
@@ -75,21 +75,21 @@ func (suite *CmdSuite) TestGet() {
 		b, _ = b.CreateBucket([]byte("subbucket"))
 		return b.Put([]byte("key"), []byte("value"))
 	})
-	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket", "key"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "non-exist", "key"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "subbucket", "key"))
-	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket", "subbucket", "subbucket", "key"))
+	assert.Equal(suite.T(), `"value"`, ExecCmdInCli("get", "bucket", "key"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "non-exist", "key"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "subbucket", "key"))
+	assert.Equal(suite.T(), `"value"`, ExecCmdInCli("get", "bucket", "subbucket", "subbucket", "key"))
 }
 
 func (suite *CmdSuite) TestSet() {
 	assert.Equal(suite.T(), "ERR wrong number of arguments for 'set' command",
 		ExecCmdInCli("set", "bucket", "key"))
 	assert.Equal(suite.T(), "true", ExecCmdInCli("set", "bucket", "key", "value"))
-	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket", "key"))
+	assert.Equal(suite.T(), `"value"`, ExecCmdInCli("get", "bucket", "key"))
 	assert.Equal(suite.T(), "true", ExecCmdInCli("set", "bucket", "subbucket", "key", "value"))
-	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket", "subbucket", "key"))
+	assert.Equal(suite.T(), `"value"`, ExecCmdInCli("get", "bucket", "subbucket", "key"))
 	assert.Equal(suite.T(), "true", ExecCmdInCli("set", "bucket1", "bucket2", "key", "value"))
-	assert.Equal(suite.T(), "value", ExecCmdInCli("get", "bucket1", "bucket2", "key"))
+	assert.Equal(suite.T(), `"value"`, ExecCmdInCli("get", "bucket1", "bucket2", "key"))
 }
 
 func (suite *CmdSuite) TestDel() {
@@ -108,13 +108,13 @@ func (suite *CmdSuite) TestDel() {
 		return b.Put([]byte("key"), []byte("value"))
 	})
 	assert.Equal(suite.T(), "true", ExecCmdInCli("del", "bucket", "key"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "key"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "key"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("del", "bucket", "key"))
 
 	assert.Equal(suite.T(), "false", ExecCmdInCli("del", "bucket", "subbucket", "non-exist"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("del", "bucket", "subbucket", "non-exist-bucket", "key"))
 	assert.Equal(suite.T(), "true", ExecCmdInCli("del", "bucket", "subbucket", "subbucket", "key"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "subbucket", "subbucket", "key"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "subbucket", "subbucket", "key"))
 	assert.Equal(suite.T(), "true", ExecCmdInCli("del", "bucket", "subbucket"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket", "subbucket"))
 
@@ -140,12 +140,12 @@ func (suite *CmdSuite) TestDelGlob() {
 	})
 	assert.Equal(suite.T(), "0", ExecCmdInCli("delglob", "bucket", "non-exist", "*"))
 	assert.Equal(suite.T(), "1", ExecCmdInCli("delglob", "bucket", "subbucket", "subbucket", "*"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "subbucket", "subbucket", "key"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "subbucket", "subbucket", "key"))
 	assert.Equal(suite.T(), "1", ExecCmdInCli("delglob", "bucket", "subbucket", "sub*"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket", "subbucket", "subbucket"))
 
 	assert.Equal(suite.T(), "3", ExecCmdInCli("delglob", "bucket", "*"))
-	assert.Equal(suite.T(), "", ExecCmdInCli("get", "bucket", "key_1"))
+	assert.Equal(suite.T(), `""`, ExecCmdInCli("get", "bucket", "key_1"))
 
 	assert.Equal(suite.T(), "1", ExecCmdInCli("delglob", "bucket*"))
 	assert.Equal(suite.T(), "false", ExecCmdInCli("exists", "bucket"))
@@ -243,12 +243,11 @@ func (suite *CmdSuite) TestStats() {
 		}
 		return nil
 	})
-	assert.NotEqual(suite.T(), "", ExecCmdInCli("stats"))
+	assert.NotEqual(suite.T(), `""`, ExecCmdInCli("stats"))
 
 	info, _ := stats()
-	freeAlloc, _ := strconv.Atoi(info.(map[string]interface{})["FreeAlloc"].(string))
+	freeAlloc, _ := info.(map[string]interface{})["FreeAlloc"].(int64)
 	assert.True(suite.T(), freeAlloc > 0)
-	txStatusWrite, _ := strconv.Atoi(
-		info.(map[string]interface{})["TxStats"].(map[string]interface{})["Write"].(string))
+	txStatusWrite, _ := info.(map[string]interface{})["TxStats"].(map[string]interface{})["Write"].(int64)
 	assert.True(suite.T(), txStatusWrite > 0)
 }

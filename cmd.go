@@ -332,7 +332,7 @@ func stats(_ ...string) (res interface{}, err error) {
 		valField := val.Field(i)
 		typeField := val.Type().Field(i)
 		if typeField.Type.Name() == "int" {
-			info[typeField.Name] = strconv.FormatInt(valField.Int(), 10)
+			info[typeField.Name] = valField.Int()
 		}
 	}
 	val = reflect.ValueOf(stat.TxStats)
@@ -341,7 +341,7 @@ func stats(_ ...string) (res interface{}, err error) {
 		valField := val.Field(i)
 		typeField := val.Type().Field(i)
 		if typeField.Type.Name() == "int" || typeField.Type.Name() == "Duration" {
-			info["TxStats"].(map[string]interface{})[typeField.Name] = strconv.FormatInt(valField.Int(), 10)
+			info["TxStats"].(map[string]interface{})[typeField.Name] = valField.Int()
 		}
 	}
 	return info, nil
@@ -349,7 +349,7 @@ func stats(_ ...string) (res interface{}, err error) {
 
 type cmd func(...string) (interface{}, error)
 
-var cmdMap = map[string]cmd{
+var CmdMap = map[string]cmd{
 	"del":       del,
 	"delglob":   delGlob,
 	"exists":    exists,
@@ -389,6 +389,8 @@ func formatMapToStr(collection map[string]interface{}, prefix string) string {
 	sort.Strings(keys)
 	for i, k := range keys {
 		switch v := collection[k].(type) {
+		case int64:
+			formatted[i] = fmt.Sprintf(`%s%s) %v`, prefix, k, v)
 		case string:
 			formatted[i] = fmt.Sprintf(`%s%s) "%s"`, prefix, k, v)
 		case map[string]interface{}:
@@ -402,7 +404,7 @@ func formatMapToStr(collection map[string]interface{}, prefix string) string {
 
 // ExecCmdInCli run given cmd with args, return formatted string according to cmd result.
 func ExecCmdInCli(cmd string, args ...string) string {
-	f, ok := cmdMap[strings.ToLower(cmd)]
+	f, ok := CmdMap[strings.ToLower(cmd)]
 	if !ok {
 		return fmt.Sprintf("ERR unknown command '%s'", cmd)
 	}
@@ -416,9 +418,9 @@ func ExecCmdInCli(cmd string, args ...string) string {
 	case bool:
 		return strconv.FormatBool(res)
 	case []byte:
-		return string(res)
+		return fmt.Sprintf("\"%s\"", string(res))
 	case string:
-		return res
+		return fmt.Sprintf("\"%s\"", res)
 	case []string:
 		return formatListToStr(res)
 	case map[string]interface{}:
