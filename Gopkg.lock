@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Shopify/go-lua"
+  packages = ["."]
+  revision = "88a6f168eee0ba102d7d20c5281056a5dd3d7550"
+
+[[projects]]
   name = "github.com/chzyer/readline"
   packages = ["."]
   revision = "62c6fe6193755f722b8b8788aa7357be55a50ff1"
@@ -40,6 +46,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f85d5a5f858ab31ab399fca88be3785eff9a8f48e0582610381aa9b3e789d470"
+  inputs-digest = "5933a9ac04e2598d52681d792c30e954e5b6c7424303ee32f5e66a42307c1596"
   solver-name = "gps-cdcl"
   solver-version = 1
