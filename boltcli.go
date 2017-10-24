@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -12,6 +14,9 @@ var (
 	DB *bolt.DB
 	// DbPath is the path of given db file
 	DbPath string
+
+	shouldPrintVersion = flag.Bool("version", false, "Output version and exit.")
+	version            = "1.0.0"
 )
 
 func initDB(dbPath string) {
@@ -23,7 +28,16 @@ func initDB(dbPath string) {
 	DbPath = dbPath
 }
 
+func printVersion() {
+	fmt.Printf("boltcli %s\n", version)
+}
+
 func main() {
+	flag.Parse()
+	if *shouldPrintVersion {
+		printVersion()
+		os.Exit(0)
+	}
 	if len(os.Args) <= 1 {
 		log.Fatalf("database filename is required.")
 	}
