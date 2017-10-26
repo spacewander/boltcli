@@ -1,5 +1,10 @@
 ![screenshot](./screenshot.png)
 
+[![Travis](https://travis-ci.org/spacewander/boltcli.svg?branch=master)](https://travis-ci.org/spacewander/boltcli)
+[![GoReportCard](http://goreportcard.com/badge/spacewander/boltcli)](http://goreportcard.com/report/spacewander/boltcli)
+[![codecov.io](https://codecov.io/github/spacewander/boltcli/coverage.svg?branch=master)](https://codecov.io/github/spacewander/boltcli?branch=master)
+[![license](https://img.shields.io/badge/License-GPLv3-green.svg)](https://github.com/spacewander/boltcli/blob/master/LICENSE)
+
 ## Feature
 
 * Support CRUD commands on the bucket/key in repl-like command line. You can consider it as `redis-cli` for boltdb.

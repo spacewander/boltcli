@@ -18,7 +18,7 @@ func buildCompleter() readline.AutoCompleter {
 	return readline.NewPrefixCompleter(cmds...)
 }
 
-func GetHomeDir() string {
+func getHomeDir() string {
 	env := "HOME"
 	if runtime.GOOS == "windows" {
 		env = "USERPROFILE"
@@ -26,8 +26,9 @@ func GetHomeDir() string {
 	return os.Getenv(env)
 }
 
+// StartCli starts the repl environment
 func StartCli() {
-	historyFileDir := filepath.Join(GetHomeDir(), ".cache")
+	historyFileDir := filepath.Join(getHomeDir(), ".cache")
 	if _, err := os.Stat(historyFileDir); os.IsNotExist(err) {
 		// simply ignore error since the history feature is optional.
 		os.Mkdir(historyFileDir, 0644)

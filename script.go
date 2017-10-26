@@ -15,10 +15,10 @@ var (
 func init() {
 	vm = lua.NewState()
 	lua.OpenLibraries(vm)
-	injectApi(vm)
+	injectAPI(vm)
 }
 
-func injectApi(L *lua.State) {
+func injectAPI(L *lua.State) {
 	L.CreateTable(0, 1)
 
 	L.CreateTable(0, 1)
@@ -120,6 +120,7 @@ func execCmdInLuaScript(L *lua.State) int {
 	return 1
 }
 
+// StartScript evals given script file
 func StartScript(script string) error {
 	return lua.DoFile(vm, script)
 }

@@ -349,6 +349,7 @@ func stats(_ ...string) (res interface{}, err error) {
 
 type cmd func(...string) (interface{}, error)
 
+// CmdMap holds the relation between command name and its implement function
 var CmdMap = map[string]cmd{
 	"del":       del,
 	"delglob":   delGlob,

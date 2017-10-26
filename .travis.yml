@@ -1,0 +1,11 @@
+language: go
+
+script:
+  - go test -covermode count -coverprofile coverage.txt
+after_success:
+  # See https://github.com/codecov/example-go
+  - bash <(curl -s https://codecov.io/bash)
+
+go:
+  - 1.8
+  - tip
