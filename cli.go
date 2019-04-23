@@ -59,6 +59,10 @@ func StartCli() {
 		}
 
 		fields := strings.Fields(strings.TrimSpace(line))
+		if len(fields) == 0 {
+			continue
+		}
+
 		result := ExecCmdInCli(fields[0], fields[1:]...)
 		if result != "" {
 			println(result)
