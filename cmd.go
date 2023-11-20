@@ -347,6 +347,27 @@ func stats(_ ...string) (res interface{}, err error) {
 	return info, nil
 }
 
+type HelpOutput string
+
+func help(args ...string) (res interface{}, err error) {
+	if len(args) == 0 {
+		cmds := []string{}
+		for k, _ := range CmdHelp {
+			cmds = append(cmds, k)
+		}
+		sort.Strings(cmds)
+
+		return HelpOutput(fmt.Sprintf("Commands: %s", strings.Join(cmds, ", "))), nil
+	}
+
+	h, found := CmdHelp[strings.ToLower(args[0])]
+	if !found {
+		return HelpOutput(fmt.Sprintf("Invalid command: %s", args[0])), nil
+	}
+
+	return HelpOutput(fmt.Sprintf("Command: %s %s\n\n%s\n", args[0], h[0], h[1])), nil
+}
+
 type cmd func(...string) (interface{}, error)
 
 // CmdMap holds the relation between command name and its implement function
@@ -355,6 +376,7 @@ var CmdMap = map[string]cmd{
 	"delglob":   delGlob,
 	"exists":    exists,
 	"get":       get,
+	"help":      help,
 	"set":       set,
 	"buckets":   buckets,
 	"keys":      keys,
@@ -428,6 +450,8 @@ func ExecCmdInCli(cmd string, args ...string) string {
 		return formatMapToStr(res, "")
 	case int:
 		return strconv.Itoa(res)
+	case HelpOutput:
+		return fmt.Sprintf("%s", res)
 	default:
 		panic(fmt.Sprintf(
 			"The type of result returns from command '%s' with args %v is unsupported",
