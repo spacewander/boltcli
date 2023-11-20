@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	bolt "github.com/coreos/bbolt"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
