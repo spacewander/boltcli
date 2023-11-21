@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	bolt "github.com/coreos/bbolt"
+	bolt "go.etcd.io/bbolt"
 	"github.com/gobwas/glob"
 )
 
