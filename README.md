@@ -16,7 +16,16 @@
 
 ## Commands
 
-See [Commands](./Commands.md)
+Documentation for commands is available with the built-in help command:
+```
+/tmp/test.db> help
+Commands: buckets, del, delglob, exists, get, help, keys, keyvalues, set, stats
+/tmp/test.db> help help
+Command: help command
+
+Shows the help output for the given command.
+
+```
 
 ## Lua support
 
